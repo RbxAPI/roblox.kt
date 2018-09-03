@@ -27,6 +27,12 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.github.kittinunf.fuel:fuel:1.13.0"
     implementation 'com.beust:klaxon:3.0.8'
+
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.2.0"
+    testCompile "org.jetbrains.kotlin:kotlin-test"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit"
+
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.2.0"
 }
 
 compileKotlin {
@@ -35,6 +41,10 @@ compileKotlin {
 
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 dokka {
