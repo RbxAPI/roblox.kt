@@ -12,11 +12,11 @@ import com.github.kittinunf.fuel.Fuel
  * @property groups The user's groups (if [fetchGroups] has been ran)
  */
 data class User(val id: Int, val name: String) {
-    @Json(ignored = true) var groups: List<UserGroup>? = null
+    @Json(ignored = true) lateinit var groups: List<UserGroup>
         private set
 
     /**
-     * Fetches all the user's groups and sets [groups]
+     * Fetches all the user's Roblox groups and sets [groups]
      * @return List of [UserGroup]
      */
     fun fetchGroups(): List<UserGroup> {

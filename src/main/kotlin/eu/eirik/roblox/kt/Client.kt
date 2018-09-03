@@ -16,8 +16,8 @@ class LoginUserInfo(val user: User)
  * Expires approximately every 24 hours
  */
 class Client {
-    var user: User? = null
-    var token: String? = null
+    lateinit var user: User
+    lateinit var token: String
 
     /**
      * Logs in, and sets [user] and [token]
@@ -28,19 +28,16 @@ class Client {
         val (_, csrfResponse, csrfResult) = Fuel.post("https://auth.roblox.com/").response()
 
         // 403 Expected (ROBLOX requires CSRF token)
-        var csrfToken: String? = null
+        val csrfToken: String?
 
         if (csrfResponse.statusCode == 403) csrfToken = csrfResponse.headers["X-CSRF-TOKEN"]?.get(0)
         else {
             val (_, error) = csrfResult
             if (error != null) throw error
-            else println("Unexpected status code and no error")
+            else throw Exception("Unexpected status code and no error when getting CSRF token")
         }
 
-        if (csrfToken == null) {
-            println("Couldn't get CSRF token")
-            return null
-        }
+        if (csrfToken == null) throw Exception("Couldn't get CSRF token")
 
         val loginCredentials = """
             {
@@ -57,26 +54,27 @@ class Client {
         val (data, error) = loginResult
         if (error != null) throw error
 
-        var cookie: String? = null
+        val cookie: String?
         val cookies = loginResponse.headers["Set-Cookie"]
 
         if (cookies != null) {
             val tokenCookieList = cookies.filter { it.contains("ROBLOSECURITY") }
 
-            if (tokenCookieList.isEmpty()) println("No token cookie in response")
-            else if (tokenCookieList.size > 1) println("Multiple cookies match \"ROBLOSECURITY\" ")
+            if (tokenCookieList.isEmpty()) throw Exception("No token cookie in response")
+            else if (tokenCookieList.size > 1) throw Exception("Multiple cookies match \"ROBLOSECURITY\"")
             else {
                 cookie = tokenCookieList.single()
 
                 if (data != null) {
-                    user = Klaxon().parse<LoginUserInfo>(data)?.user
+                    val loginUserInfo = Klaxon().parse<LoginUserInfo>(data)
+                    if (loginUserInfo != null) {
+                        user = loginUserInfo.user
+                    } else println("Cookie token received successfully but no user information in response. Fetch it manually")
                 } else println("Cookie token received successfully but no user information in response. Fetch it manually")
             }
-        } else println("No `Set-Cookie` header in response")
+        } else throw Exception("No `Set-Cookie` header in response")
 
-        if (cookie == null) println("Couldn't get cookie")
-        else token = cookie
-
+        token = cookie
         return cookie
     }
 }
