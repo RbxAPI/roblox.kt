@@ -1,8 +1,9 @@
 package eu.eirik.roblox.kt
 
-import com.beust.klaxon.Json
-import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 
 /**
  * A Roblox user/player
@@ -11,12 +12,12 @@ import com.github.kittinunf.fuel.Fuel
  * @property name The user name
  * @property groups The user's groups (if [fetchGroups] has been ran)
  */
-data class User(val id: Int, val name: String) {
-    @Json(ignored = true) lateinit var groups: List<UserGroup>
+class User(val id: Int, val name: String) {
+    lateinit var groups: List<UserGroup>
         private set
 
     /**
-     * Fetches all the user's Roblox groups and sets [groups]
+     * Fetches all the user's Roblox groups and sets [UserGroup]
      * @return List of [UserGroup]
      */
     fun fetchGroups(): List<UserGroup> {
@@ -28,9 +29,14 @@ data class User(val id: Int, val name: String) {
         if (error != null) throw error
 
         if (data != null) {
-            val parsedData = Klaxon().parseArray<UserGroup>(data) ?: throw Exception("No groups")
-            groups = parsedData
-            return parsedData
+            val gson = GsonBuilder()
+                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                    .create()
+
+            val listType = object : TypeToken<List<UserGroup>>() { }.type
+            groups = gson.fromJson(data, listType)
+
+            return groups
         } else throw Exception("No data in user groups response")
     }
 }

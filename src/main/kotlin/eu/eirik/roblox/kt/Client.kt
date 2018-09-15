@@ -1,11 +1,10 @@
 package eu.eirik.roblox.kt
 
-import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 
 const val loginUrl = "https://auth.roblox.com/v2/login"
-
-class LoginUserInfo(val user: User)
 
 /**
  * A client to interact with Roblox, starting point for every application
@@ -66,10 +65,9 @@ class Client {
                 cookie = tokenCookieList.single()
 
                 if (data != null) {
-                    val loginUserInfo = Klaxon().parse<LoginUserInfo>(data)
-                    if (loginUserInfo != null) {
-                        user = loginUserInfo.user
-                    } else println("Cookie token received successfully but no user information in response. Fetch it manually")
+                    val gson = Gson()
+                    val rootObject: JsonObject = gson.fromJson(data, JsonObject::class.java)
+                    user = gson.fromJson(rootObject.get("user"), User::class.java)
                 } else println("Cookie token received successfully but no user information in response. Fetch it manually")
             }
         } else throw Exception("No `Set-Cookie` header in response")
