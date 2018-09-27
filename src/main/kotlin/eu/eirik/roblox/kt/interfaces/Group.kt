@@ -5,12 +5,12 @@ package eu.eirik.roblox.kt.interfaces
  *
  * @property id The group ID
  * @property name The group name
- * @property emblemId The group emblem/logo asset ID
- * @property emblemUrl The group emblem/logo asset URL
+ * @property description The group description
+ * @property memberCount The group member count
  */
 interface Group {
     val id: Int
     val name: String
-    val emblemId: Int
-    val emblemUrl: String
+    val description: String
+    val memberCount: Int
 }

@@ -1,9 +1,7 @@
 package eu.eirik.roblox.kt
 
 import com.github.kittinunf.fuel.Fuel
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonParser
 
 /**
  * A Roblox user/player
@@ -17,11 +15,11 @@ class User(val id: Int, val name: String) {
         private set
 
     /**
-     * Fetches all the user's Roblox groups and sets [UserGroup]
+     * Fetches all the user's Roblox groups and sets [groups]
      * @return List of [UserGroup]
      */
     fun fetchGroups(): List<UserGroup> {
-        val userGroupsUrl = "https://api.roblox.com/users/$id/groups"
+        val userGroupsUrl = "https://groups.roblox.com/v1/users/$id/groups/roles"
 
         val (_, _, result) = Fuel.get(userGroupsUrl).responseString()
         val (data, error) = result
@@ -29,14 +27,21 @@ class User(val id: Int, val name: String) {
         if (error != null) throw error
 
         if (data != null) {
-            val gson = GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
-                    .create()
+            val parser = JsonParser()
+            val root = parser.parse(data).asJsonObject
+            val rolesData = root.getAsJsonArray("data")
 
-            val listType = object : TypeToken<List<UserGroup>>() { }.type
-            groups = gson.fromJson(data, listType)
+            val userGroups: MutableList<UserGroup> = mutableListOf()
 
-            return groups
+            for (userGroupData in rolesData.iterator()) {
+                val groupData = userGroupData.asJsonObject.get("group").asJsonObject
+                val roleData = userGroupData.asJsonObject.get("role").asJsonObject
+
+                userGroups.add(UserGroup(groupData.get("id").asInt, groupData.get("name").asString, groupData.get("description").asString, groupData.get("memberCount").asInt, roleData.get("rank").asInt, roleData.get("name").asString))
+            }
+
+            groups = userGroups
+            return userGroups
         } else throw Exception("No data in user groups response")
     }
 }
